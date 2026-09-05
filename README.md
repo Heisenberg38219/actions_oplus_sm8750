@@ -25,12 +25,11 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.141` (upstreamed from 6.6.89) |
+| **Kernel Version** | `6.6.142` (upstreamed from OGKI 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
-| **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
 | **ROM Compatibility** | OxygenOS / ColorOS **or** AOSP — one build per ROM type ([see below](#-rom-compatibility)) |
-| **Root Solution** | SukiSU Ultra / KSU Next / KSU / ReSukiSU (Multi-Manager) |
+| **Root Solution** | SukiSU Ultra / KSU Next / KSU / ReSukiSU |
 | **Build System** | GitHub Actions CI/CD (optimized for ~5-6min builds) |
 
 ---
@@ -95,7 +94,6 @@
 - ✅ **Re-Kernel Support** – Enhanced app freezing via NoActive/Freezer *(optional)*
 
 ### 🧩 KernelSU Enhancements
-- ✅ **KPM Support** – Kernel Patch Module for SukiSU Ultra *(optional)*
 - ✅ **Multi-Manager** – Compatible with multiple KSU variants
 
 ---
@@ -167,7 +165,7 @@
    - ✅ Fengchi (performance scheduler)
    - ✅ Memory Opt Patches (25 optimizations)
    - 🔘 LTO Type: `thin` (balanced) / `none` (fastest compile) / `full` (max optimization)
-   - 🔘 Optional features: KPM, LZ4KD, NTSync, IPv6 NAT, etc.
+   - 🔘 Optional features: LZ4KD, NTSync, IPv6 NAT, etc.
 5. Click **"Run workflow"** → Wait ~5-6 minutes
 6. Download `AnyKernel3_*.zip` from artifacts or Telegram (if you configured TG bot)
 
@@ -231,7 +229,7 @@ This CI pipeline includes:
 | [mrcxlinux](https://github.com/mrcxlinux) | The base workflow
 | [xiaomichael](https://github.com/xiaomichael) | Some help & GKI infrastructure |
 | [cctv18](https://github.com/cctv18) | SuSFS, ccache-ECS, Baseband Guard, public ccache |
-| [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core & KPM framework |
+| [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core |
 | [Numbersf](https://github.com/Numbersf) | Fengchi / HMBIRD scheduler patches |
 | [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches, BBRv3 backport patch & workflow optimization |
 | [ShirkNeko](https://github.com/ShirkNeko) | LZ4KD & ZRAM patches |
@@ -258,6 +256,5 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.141-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.142-palaziks-ShiftPorts</code></sub>
 </p>
-```

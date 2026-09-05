@@ -1,7 +1,7 @@
 name: ReSukiSU OP13 Build
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-6.6.141
+  group: ${{ github.workflow }}-${{ github.ref }}-6.6.142
   cancel-in-progress: true
 
 env:
@@ -9,7 +9,7 @@ env:
   ANDROID_VERSION: 'android15'
   KERNEL_VERSION: '6.6'
   KERNEL_NAME: 'android15-8-g29d86c5fc9dd-abogki428889875-4k'
-  CCACHE_KEY: ccache-neov4-6.6.141
+  CCACHE_KEY: ccache-neov4-6.6.142
 
 on:
   workflow_dispatch:
@@ -19,11 +19,6 @@ on:
         required: true
         type: boolean
         default: true
-      KPM:
-        description: 'Enable KPM'
-        required: true
-        type: boolean
-        default: false
       lz4_enable:
         description: 'Install LZ4 1.10.0 + ZSTD 1.5.7 Patch'
         required: true
@@ -199,7 +194,7 @@ jobs:
 
           # Source clone
           echo "Cloning source repository..."
-          curl -L https://github.com/palazik/android_kernel_common_oneplus_sm8750/archive/refs/heads/6.6.141_oneplus13_coloros16.zip \
+          curl -L https://github.com/palazik/android_kernel_common_oneplus_sm8750/archive/refs/heads/6.6.142_oneplus13_coloros16.zip \
             -o common.zip &&
           unzip -q common.zip &&
           mv android_kernel_common_oneplus_sm8750-* common &&
@@ -254,8 +249,6 @@ jobs:
             sudo apt-get install -y --no-install-recommends cmake
             git clone --depth=1 https://github.com/cctv18/ccache-ECS.git /tmp/ccache-ecs
             cd /tmp/ccache-ecs
-            # Без CMAKE_GENERATOR — использует make, ninja не нужен
-            # DEPS=DOWNLOAD внутри build-binary — cmake сам скачивает zstd/hiredis
             ./ci/build-binary
             mkdir -p /tmp/ccache-ecs-bin
             cp install/ccache /tmp/ccache-ecs-bin/ccache
@@ -274,13 +267,13 @@ jobs:
 
       - name: Configure CCache Directory
         run: |
-          echo "CCACHE_DIR=$HOME/.ccache_6.6.141" >> $GITHUB_ENV
-          echo "LDCACHE_DIR=$GITHUB_WORKSPACE/ldcache_6.6.141" >> $GITHUB_ENV
-          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.141
+          echo "CCACHE_DIR=$HOME/.ccache_6.6.142" >> $GITHUB_ENV
+          echo "LDCACHE_DIR=$GITHUB_WORKSPACE/ldcache_6.6.142" >> $GITHUB_ENV
+          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.142
           echo "CCACHE_MAXSIZE=10G" >> $GITHUB_ENV
           echo "Current Disk Space:"
           df -h
-          echo "Current Build Kernel Version: 6.6.141"
+          echo "Current Build Kernel Version: 6.6.142"
 
       - name: Restore CCache
         uses: actions/cache/restore@v4
@@ -314,7 +307,7 @@ jobs:
           
           echo "Cache miss, attempting to pull public ccache..."
           mkdir -p ${{ env.CCACHE_DIR }}
-          FILE_NAME="ccache-6.6.141.tar.zst"
+          FILE_NAME="ccache-6.6.142.tar.zst"
           
           if gh release download -p "$FILE_NAME" -R cctv18/public_ccache; then
             echo "Successfully downloaded $FILE_NAME, extracting..."
@@ -363,7 +356,7 @@ jobs:
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
-          git clone --depth=1 https://github.com/TheWildJames/kernel_patches.git wildkernels_patches &
+          git clone --depth=1 https://github.com/palazik/kernel_patches.git wildkernels_patches &
           wait
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
@@ -423,13 +416,6 @@ jobs:
             echo "CONFIG_CRYPTO_LZ4K=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_LZ4KD=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_842=y" >> "$DEFCONFIG"
-          fi
-      
-          if [ "${{ github.event.inputs.KPM }}" == "true" ]; then
-            echo "📦 Enabling KPM..."
-            echo "CONFIG_KPM=y" >> "$DEFCONFIG"
-            echo "CONFIG_KALLSYMS=y" >> "$DEFCONFIG"
-            echo "CONFIG_KALLSYMS_ALL=y" >> "$DEFCONFIG"
           fi
       
           echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG"
@@ -557,7 +543,7 @@ jobs:
       - name: Apply Unicode Bypass Fix
         working-directory: kernel_workspace/common
         run: |
-          PATCH_URL="https://github.com/TheWildJames/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
+          PATCH_URL="https://github.com/palazik/kernel_patches/raw/main/common/unicode_bypass_fix_6.1+.patch"
           wget -qO /tmp/ub_fix.patch "$PATCH_URL" 2>/dev/null && \
             patch -p1 --forward < /tmp/ub_fix.patch || true
           echo "Unicode fix applied"
@@ -572,7 +558,6 @@ jobs:
           patch -p1 -F 3 < /tmp/bore.patch
           echo "✅ BORE scheduler applied"
 
-      # ── NEW: Memory & Scheduler Optimization Patches (WildKernels) ───────────
       - name: Apply Memory & Scheduler Optimization Patches
         if: inputs.mem_opt_patches
         working-directory: kernel_workspace/common
@@ -618,7 +603,6 @@ jobs:
 
           echo "✅ Optimization patches applied"
 
-      # ── NEW: NTSync ──────────────────────────────────────────────────────────
       - name: Apply NTSync Patch
         if: inputs.ntsync_enable
         working-directory: kernel_workspace/common
@@ -659,7 +643,6 @@ jobs:
           echo "CONFIG_NTSYNC=y" >> arch/arm64/configs/gki_defconfig
           echo "✅ NTSync enabled"
 
-      # ── NEW: Droidspaces ─────────────────────────────────────────────────────
       - name: Add Droidspaces Support
         if: inputs.droidspaces_enable
         working-directory: kernel_workspace/common
@@ -690,7 +673,6 @@ jobs:
           EOF
           echo "✅ Droidspaces support enabled"
 
-      # ── NEW: IP_SET + IPv6 NAT ───────────────────────────────────────────────
       - name: Add IP_SET + IPv6 NAT Support
         if: inputs.ip_set_enable
         working-directory: kernel_workspace/common
@@ -732,7 +714,6 @@ jobs:
           fi
           echo "✅ IP_SET + IPv6 NAT enabled"
 
-      # ── NEW: TTL Target ──────────────────────────────────────────────────────
       - name: Add TTL/HL Target Support
         if: inputs.ttl_enable
         working-directory: kernel_workspace/common
@@ -850,7 +831,6 @@ jobs:
             fi
           fi
 
-      # ── BBRv3 (FatalCoder524 method — patch from WildKernels/kernel_patches) ──
       - name: Apply BBRv3
         working-directory: kernel_workspace/common
         run: |
@@ -922,13 +902,13 @@ jobs:
 
           # RAM disk for build output (15GB RAM available, safe to use)
           mkdir -p $GITHUB_WORKSPACE/kout
-          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.141
+          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.142
 
           cd kernel_workspace/common
 
           # LTO thin cache wrapper pointing to RAM disk
           echo '#!/bin/bash' > ld-wrapper
-          echo 'ld.lld "$@" --thinlto-cache-dir=$GITHUB_WORKSPACE/ldcache_6.6.141 --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
+          echo 'ld.lld "$@" --thinlto-cache-dir=$GITHUB_WORKSPACE/ldcache_6.6.142 --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
           chmod +x ld-wrapper
 
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfakestat.so || true
@@ -965,7 +945,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-neov4-6.6.141-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
+          key: ccache-neov4-6.6.142-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
 
       - name: 📦 Save LTO CCache
         if: success() && inputs.lto_type == 'thin'
@@ -974,16 +954,6 @@ jobs:
           path: ${{ env.LDCACHE_DIR }}
           key: lto-cache-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
           
-      - name: 🧩 Patch Kernel Image (KPM)
-        if: inputs.KPM
-        run: |
-          cd $GITHUB_WORKSPACE/kout/arch/arm64/boot
-          curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
-          chmod +x patch_linux
-          ./patch_linux
-          rm -f Image
-          mv oImage Image
-
       - name: 🧠 Package AK3 ZIP
         id: create_zip
         run: |
@@ -1000,8 +970,8 @@ jobs:
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
             wget https://raw.githubusercontent.com/$GITHUB_REPOSITORY/refs/heads/$GITHUB_REF_NAME/zram.zip || true
           fi
-          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.141_palaziks-ShiftPorts.zip
-          FULL_VERSION=6.6.141-palaziks-ShiftPorts
+          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.142_palaziks-ShiftPorts.zip
+          FULL_VERSION=6.6.142-palaziks-ShiftPorts
           zip -r ../$AK3_NAME ./*
           echo "ak3name=$AK3_NAME" >> $GITHUB_OUTPUT
           
@@ -1016,7 +986,6 @@ jobs:
           echo "KSU Branch: ${KSU_TYPENAME}" >> ./ak3.log
           echo "KSU Ver: ${KSUVER}" >> ./ak3.log
           echo "SuSFS: ${{ github.event.inputs.SUSFS }}" >> ./ak3.log
-          echo "KPM: ${{ github.event.inputs.KPM }}" >> ./ak3.log
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
@@ -1066,12 +1035,12 @@ jobs:
         run: |
           DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
           COMMIT_HASH=$(echo "${{ github.sha }}" | cut -c1-8)
-          COMMIT_MSG="Workflow Dispatch: 6.6.141"
+          COMMIT_MSG="Workflow Dispatch: 6.6.142"
           REPO_URL="https://github.com/${{ github.repository }}"
           RUN_URL="$REPO_URL/actions/runs/${{ github.run_id }}"
           TIME_NOW="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
 
-          export TG_KERNEL_VERSION="6.6.141"
+          export TG_KERNEL_VERSION="6.6.142"
           export TG_KSU_DISPLAY="ReSukiSU"
           export TG_KSUVER="${{ env.KSUVER }}"
           export TG_SUFFIX="palaziks-ShiftPorts"
@@ -1081,7 +1050,6 @@ jobs:
           export TG_RUN_URL="$RUN_URL"
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
-          export TG_KPM="${{ github.event.inputs.KPM }}"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
           export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
@@ -1134,7 +1102,6 @@ jobs:
               {"tag": "h4", "children": ["⚡ Features"]},
               {"tag": "ul", "children": [
                   feat(e("TG_SUSFS"),   "SuSFS"),
-                  feat("true" if e("TG_KPM") != "false" else "false", f"KPM ({e('TG_KPM')})"),
                   feat("true" if e("TG_BBR") != "false" else "false", f"BBR/Brutal ({e('TG_BBR')})"),
                   feat(e("TG_BBR3"), "BBRv3 TCP Congestion Control"),
                   feat(e("TG_ADIOS"),   "ADIOS IO Scheduler"),
@@ -1269,7 +1236,7 @@ jobs:
 
       - name: Set Environment Variables
         run: |
-          FULL_VERSION=6.6.141-palaziks-ShiftPorts
+          FULL_VERSION=6.6.142-palaziks-ShiftPorts
           echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_ENV
           TIME="$(TZ='Asia/Shanghai' date +'%y%m%d%H%M%S')"
           TIME_FORM="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
@@ -1300,7 +1267,6 @@ jobs:
           - **TTL Target:** ${{ github.event.inputs.ttl_enable }}
           - **Memory & Scheduler Optimizations:** ${{ github.event.inputs.mem_opt_patches }}
           - **Multi-Manager:** true
-          - **KPM:** ${{ github.event.inputs.KPM }}
           - **LZ4:** ${{ github.event.inputs.lz4_enable }}
           - **LZ4KD:** ${{ github.event.inputs.lz4kd_enable }}
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}
